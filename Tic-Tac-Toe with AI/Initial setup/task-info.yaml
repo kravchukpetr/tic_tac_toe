@@ -80,6 +80,9 @@ files:
   text: |
     # write your code here
   learner_created: false
-feedback_link: https://hyperskill.org/projects/82/stages/452/implement#comment
-status: Unchecked
+feedback_link: https://hyperskill.org/learn/step/7439#comment
+status: Solved
+feedback:
+  message: Congratulations!
+  time: Mon, 20 Jun 2022 20:26:51 UTC
 record: -1
