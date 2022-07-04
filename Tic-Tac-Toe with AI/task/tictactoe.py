@@ -35,13 +35,36 @@ def get_turn_symbol_from_table(table):
     else:
         return 'O'
 
+def get_position_to_win(tbl, turn):
+    result_pos = None
+    diag1_el_lst = []
+    diag2_el_lst = []
+    el_num = 1
+    for ln in convert_table(tbl):
+        if sum(el_val == turn for el_val in ln.values()) == 2:
+            result_pos = [el_key for el_key, el_val in ln.items() if el_val != turn][0]
+            break
+    if result_pos is None:
+        for ln in convert_table(tbl):
+            if sum(el_val == turn for el_val in ln.values()) == 2:
+                result_pos = [el_key for el_key, el_val in ln.items() if el_val != turn][0]
+                break
+            diag1_el_lst.append(ln[(el_num, el_num)])
+            diag2_el_lst.append(ln[(el_num, 4 - el_num)])
+            el_num += 1
+    if result_pos is None:
+        if sum(el_val == turn for el_val in diag1_el_lst) == 2 or sum(el_val == turn for el_val in diag2_el_lst) == 2:
+            result_pos = [el_key for el_key, el_val in ln.items() if el_val != turn][0]
+    return result_pos
+
+
 def get_result(tbl):
     result_str = None
     result = False
     diag1_el_lst = []
     diag2_el_lst = []
     el_num = 1
-    for ln in convert_table(table):
+    for ln in convert_table(tbl):
         if all(el_val == 'X' for el_val in ln.values()):
             result_str = 'X wins'
             break
@@ -58,7 +81,7 @@ def get_result(tbl):
                 break
             diag1_el_lst.append(ln[(el_num, el_num)])
             diag2_el_lst.append(ln[(el_num, 4 - el_num)])
-            el_num+=1
+            el_num += 1
         if result_str is None:
             if all(el_val == 'X' for el_val in diag1_el_lst) or all(el_val == 'X' for el_val in diag2_el_lst):
                 result_str = 'X wins'
@@ -83,17 +106,24 @@ def make_turn(table, new_pos, turn):
             break
     return table
 
-def get_computer_turn(table, occupied_cells, lvl):
-    # print(occupied_cells)
-    while True:
-        if lvl == 'easy':
+def get_computer_turn(table, occupied_cells, lvl, turn):
+
+    if lvl == 'easy':
+        while True:
             new_pos_comp = (random.randint(1, len_x), random.randint(1, len_x))
             if new_pos_comp not in occupied_cells:
                 break
-        elif lvl == 'medium':
-            pass
+    elif lvl == 'medium':
+        new_pos_comp = get_position_to_win(table, turn)
+        print(new_pos_comp)
+        if new_pos_comp is None:
+            while True:
+                new_pos_comp = (random.randint(1, len_x), random.randint(1, len_x))
+                if new_pos_comp not in occupied_cells:
+                    break
     print('Making move level "' + lvl + '"')
     return new_pos_comp
+
 def convert_table(table):
     tmp_lst = [{}, {}, {}]
     for i, line in enumerate(table):
@@ -143,7 +173,7 @@ while True:
             if players[turn] == 'user':
                 new_pos = get_new_pos_user(occupied_cells, len_x)
             if players[turn] in role_list:
-                new_pos = get_computer_turn(table, occupied_cells, players[turn])
+                new_pos = get_computer_turn(table, occupied_cells, players[turn], turn)
             table = make_turn(table, new_pos, turn)
             print_table(table)
     else:
