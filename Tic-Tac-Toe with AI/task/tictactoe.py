@@ -86,9 +86,12 @@ def make_turn(table, new_pos, turn):
 def get_computer_turn(table, occupied_cells, lvl):
     # print(occupied_cells)
     while True:
-        new_pos_comp = (random.randint(1, len_x), random.randint(1, len_x))
-        if new_pos_comp not in occupied_cells:
-            break
+        if lvl == 'easy':
+            new_pos_comp = (random.randint(1, len_x), random.randint(1, len_x))
+            if new_pos_comp not in occupied_cells:
+                break
+        elif lvl == 'medium':
+            pass
     print('Making move level "' + lvl + '"')
     return new_pos_comp
 def convert_table(table):
@@ -97,37 +100,51 @@ def convert_table(table):
         for j in range(1, len_x+1):
             tmp_lst[i][(i+1,j)] =  table[j-1][(j, i+1)]
     return tmp_lst
-
+def get_new_pos_user(occupied_cells, len_x):
+    while True:
+        input_str = input('Enter the coordinates:')
+        input_lst = list(input_str.split(' '))
+        if not all(map(lambda x: x.isdigit(), input_lst)):
+            print('You should enter numbers!')
+            continue
+        new_pos = (int(input_lst[0]), int(input_lst[1]))
+        if any(map(lambda x: int(x) > len_x, input_lst)):
+            print('Coordinates should be from 1 to {0}!'.format(len_x))
+            continue
+        if new_pos in occupied_cells:
+            print('This cell is occupied! Choose another one!')
+            continue
+        break
+    return new_pos
 input_str = "_________"
-table = get_table_from_str(input_str)
-print_table(table)
+role_list = ['easy', 'medium']
 occupied_cells = []
-while get_result(table):
-    turn = get_turn_symbol_from_table(table)
-    if turn == 'X':
-        occupied_cells = list(key for key, value in table[0].items() if value != '_') + list(key for key, value in table[1].items() if value != '_') + list(key for key, value in table[2].items() if value != '_')
-        while True:
-            input_str = input('Enter the coordinates:')
-            input_lst = list(input_str.split(' '))
-            if not all(map(lambda x: x.isdigit(), input_lst)):
-                print('You should enter numbers!')
-                continue
-            new_pos = (int(input_lst[0]), int(input_lst[1]))
-            if any(map(lambda x: int(x) > len_x, input_lst)):
-                print('Coordinates should be from 1 to {0}!'.format(len_x))
-                continue
-            if new_pos in occupied_cells:
-                print('This cell is occupied! Choose another one!')
-                continue
-            break
-        table = make_turn(table, new_pos, turn)
-        print_table(table)
+players = {}
+while True:
+    input_command_str = input()
+    coorect_command = False
+    if input_command_str == 'exit':
+        break
     else:
-        occupied_cells = list(key for key, value in table[0].items() if value != '_') + list(key for key, value in table[1].items() if value != '_') + list(key for key, value in table[2].items() if value != '_')
-        if len(occupied_cells) == len_x * len_y:
-            break
-        new_pos_comp = get_computer_turn(table, occupied_cells, 'easy')
-        table = make_turn(table, new_pos_comp, turn)
+        input_command = input_command_str.split(' ')
+        if len(input_command) == 3 and input_command[0] == 'start' and input_command[1] in ['user'] + role_list and input_command[2] in ['user'] + role_list:
+            coorect_command = True
+            players['X'] = input_command[1]
+            players['O'] = input_command[2]
+    if coorect_command:
+        table = get_table_from_str(input_str)
         print_table(table)
-    # print(table)
-    # print(convert_table(table))
+        while get_result(table):
+            turn = get_turn_symbol_from_table(table)
+            # if turn == 'X':
+            occupied_cells = list(key for key, value in table[0].items() if value != '_') + list(key for key, value in table[1].items() if value != '_') + list(key for key, value in table[2].items() if value != '_')
+            if len(occupied_cells) == len_x * len_y:
+                break
+            if players[turn] == 'user':
+                new_pos = get_new_pos_user(occupied_cells, len_x)
+            if players[turn] in role_list:
+                new_pos = get_computer_turn(table, occupied_cells, players[turn])
+            table = make_turn(table, new_pos, turn)
+            print_table(table)
+    else:
+        print("Bad parameters!")

@@ -222,5 +222,8 @@ files:
         TicTacToeTests().run_tests()
   learner_created: false
 feedback_link: https://hyperskill.org/learn/step/7441#comment
-status: Unchecked
-record: -1
+status: Solved
+feedback:
+  message: Congratulations!
+  time: Sun, 03 Jul 2022 11:40:50 UTC
+record: 3
