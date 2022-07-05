@@ -34,36 +34,52 @@ def get_turn_symbol_from_table(table):
         return 'X'
     else:
         return 'O'
-
-def get_position_to_win(tbl, turn):
-    result_pos = None
+def get_diag_el_lst(tbl):
     diag1_el_lst = []
     diag2_el_lst = []
     el_num = 1
+    for ln in tbl:
+        diag1_el_lst.append(ln[(el_num, el_num)])
+        diag2_el_lst.append(ln[(el_num, 4 - el_num)])
+        el_num += 1
+    return diag1_el_lst, diag2_el_lst
+
+def get_position_to_win(tbl, turn, occupied_cells):
+    result_pos = None
+    diag1_el_lst, diag2_el_lst = get_diag_el_lst(tbl)
+    # print('Ход ', turn)
+    # print('diag1_el_lst ', diag1_el_lst)
+    # print('diag2_el_lst ', diag2_el_lst)
     for ln in convert_table(tbl):
         if sum(el_val == turn for el_val in ln.values()) == 2:
-            result_pos = [el_key for el_key, el_val in ln.items() if el_val != turn][0]
-            break
+            result_pos = [(el_key[1], el_key[0]) for el_key, el_val in ln.items() if el_val != turn][0]
+            if result_pos in occupied_cells:
+                result_pos = None
+            else:
+                break
     if result_pos is None:
-        for ln in convert_table(tbl):
+        for ln in tbl:
             if sum(el_val == turn for el_val in ln.values()) == 2:
                 result_pos = [el_key for el_key, el_val in ln.items() if el_val != turn][0]
-                break
-            diag1_el_lst.append(ln[(el_num, el_num)])
-            diag2_el_lst.append(ln[(el_num, 4 - el_num)])
-            el_num += 1
+                if result_pos in occupied_cells:
+                    result_pos = None
+                else:
+                    break
     if result_pos is None:
-        if sum(el_val == turn for el_val in diag1_el_lst) == 2 or sum(el_val == turn for el_val in diag2_el_lst) == 2:
-            result_pos = [el_key for el_key, el_val in ln.items() if el_val != turn][0]
+        if sum(el_val == turn for el_val in diag1_el_lst) == 2:
+            result_pos = [(i+1, i+1) for i, el_val in enumerate(diag1_el_lst) if el_val != turn][0]
+        if sum(el_val == turn for el_val in diag2_el_lst) == 2:
+            result_pos = [(i+1, 3 - i) for i, el_val in enumerate(diag2_el_lst) if el_val != turn][0]
+        result_pos = result_pos if result_pos not in occupied_cells else None
+    # print('result_pos ', result_pos)
+    # print('occupied_cells', occupied_cells)
     return result_pos
 
 
 def get_result(tbl):
     result_str = None
     result = False
-    diag1_el_lst = []
-    diag2_el_lst = []
-    el_num = 1
+    diag1_el_lst, diag2_el_lst = get_diag_el_lst(tbl)
     for ln in convert_table(tbl):
         if all(el_val == 'X' for el_val in ln.values()):
             result_str = 'X wins'
@@ -79,9 +95,6 @@ def get_result(tbl):
             elif all(el_val == 'O' for el_val in ln.values()):
                 result_str = 'O wins'
                 break
-            diag1_el_lst.append(ln[(el_num, el_num)])
-            diag2_el_lst.append(ln[(el_num, 4 - el_num)])
-            el_num += 1
         if result_str is None:
             if all(el_val == 'X' for el_val in diag1_el_lst) or all(el_val == 'X' for el_val in diag2_el_lst):
                 result_str = 'X wins'
@@ -96,7 +109,6 @@ def get_result(tbl):
     if any(el_val != '_' for ln in tbl for el_val in ln.values()):
         print(result_str)
     return result
-# input_str = input('Enter the cells:').replace(' ', '')
 
 def make_turn(table, new_pos, turn):
     for i, line in enumerate(table):
@@ -114,8 +126,11 @@ def get_computer_turn(table, occupied_cells, lvl, turn):
             if new_pos_comp not in occupied_cells:
                 break
     elif lvl == 'medium':
-        new_pos_comp = get_position_to_win(table, turn)
-        print(new_pos_comp)
+        new_pos_comp = get_position_to_win(table, turn, occupied_cells)
+        # print('Выигрышная позиция ' + str(new_pos_comp))
+        if new_pos_comp is None:
+            new_pos_comp = get_position_to_win(table, 'X' if turn == 'O' else 'O', occupied_cells)
+        # print('Позиция, чтобы нее проиграть ' + str(new_pos_comp))
         if new_pos_comp is None:
             while True:
                 new_pos_comp = (random.randint(1, len_x), random.randint(1, len_x))
