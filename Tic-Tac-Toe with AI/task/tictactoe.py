@@ -1,11 +1,12 @@
 import random
 
 len_x, len_y = 3, 3
+cnt_alarm = len_x - 1
 def print_table(table):
-    print('-' * 9)
+    print('-' * len_x * len_y)
     for line in table:
         print('| ' + ' '.join(line.values()).replace('_', ' ') + ' |')
-    print('-' * 9)
+    print('-' * len_x * len_y)
 def get_table_from_str(str):
     table = []
     i = 1
@@ -40,18 +41,15 @@ def get_diag_el_lst(tbl):
     el_num = 1
     for ln in tbl:
         diag1_el_lst.append(ln[(el_num, el_num)])
-        diag2_el_lst.append(ln[(el_num, 4 - el_num)])
+        diag2_el_lst.append(ln[(el_num, len_x + 1 - el_num)])
         el_num += 1
     return diag1_el_lst, diag2_el_lst
 
-def get_position_to_win(tbl, turn, occupied_cells):
+def get_position_to_win(tbl, turn, occupied_cells, cnt_alarm):
     result_pos = None
     diag1_el_lst, diag2_el_lst = get_diag_el_lst(tbl)
-    # print('Ход ', turn)
-    # print('diag1_el_lst ', diag1_el_lst)
-    # print('diag2_el_lst ', diag2_el_lst)
     for ln in convert_table(tbl):
-        if sum(el_val == turn for el_val in ln.values()) == 2:
+        if sum(el_val == turn for el_val in ln.values()) == cnt_alarm:
             result_pos = [(el_key[1], el_key[0]) for el_key, el_val in ln.items() if el_val != turn][0]
             if result_pos in occupied_cells:
                 result_pos = None
@@ -59,20 +57,18 @@ def get_position_to_win(tbl, turn, occupied_cells):
                 break
     if result_pos is None:
         for ln in tbl:
-            if sum(el_val == turn for el_val in ln.values()) == 2:
+            if sum(el_val == turn for el_val in ln.values()) == cnt_alarm:
                 result_pos = [el_key for el_key, el_val in ln.items() if el_val != turn][0]
                 if result_pos in occupied_cells:
                     result_pos = None
                 else:
                     break
     if result_pos is None:
-        if sum(el_val == turn for el_val in diag1_el_lst) == 2:
+        if sum(el_val == turn for el_val in diag1_el_lst) == cnt_alarm:
             result_pos = [(i+1, i+1) for i, el_val in enumerate(diag1_el_lst) if el_val != turn][0]
-        if sum(el_val == turn for el_val in diag2_el_lst) == 2:
-            result_pos = [(i+1, 3 - i) for i, el_val in enumerate(diag2_el_lst) if el_val != turn][0]
+        if sum(el_val == turn for el_val in diag2_el_lst) == cnt_alarm:
+            result_pos = [(i+1, len_x - i) for i, el_val in enumerate(diag2_el_lst) if el_val != turn][0]
         result_pos = result_pos if result_pos not in occupied_cells else None
-    # print('result_pos ', result_pos)
-    # print('occupied_cells', occupied_cells)
     return result_pos
 
 
@@ -126,11 +122,9 @@ def get_computer_turn(table, occupied_cells, lvl, turn):
             if new_pos_comp not in occupied_cells:
                 break
     elif lvl == 'medium':
-        new_pos_comp = get_position_to_win(table, turn, occupied_cells)
-        # print('Выигрышная позиция ' + str(new_pos_comp))
+        new_pos_comp = get_position_to_win(table, turn, occupied_cells, cnt_alarm)
         if new_pos_comp is None:
-            new_pos_comp = get_position_to_win(table, 'X' if turn == 'O' else 'O', occupied_cells)
-        # print('Позиция, чтобы нее проиграть ' + str(new_pos_comp))
+            new_pos_comp = get_position_to_win(table, 'X' if turn == 'O' else 'O', occupied_cells, cnt_alarm)
         if new_pos_comp is None:
             while True:
                 new_pos_comp = (random.randint(1, len_x), random.randint(1, len_x))
@@ -143,7 +137,7 @@ def convert_table(table):
     tmp_lst = [{}, {}, {}]
     for i, line in enumerate(table):
         for j in range(1, len_x+1):
-            tmp_lst[i][(i+1,j)] =  table[j-1][(j, i+1)]
+            tmp_lst[i][(i+1, j)] = table[j-1][(j, i+1)]
     return tmp_lst
 def get_new_pos_user(occupied_cells, len_x):
     while True:
@@ -181,7 +175,6 @@ while True:
         print_table(table)
         while get_result(table):
             turn = get_turn_symbol_from_table(table)
-            # if turn == 'X':
             occupied_cells = list(key for key, value in table[0].items() if value != '_') + list(key for key, value in table[1].items() if value != '_') + list(key for key, value in table[2].items() if value != '_')
             if len(occupied_cells) == len_x * len_y:
                 break
